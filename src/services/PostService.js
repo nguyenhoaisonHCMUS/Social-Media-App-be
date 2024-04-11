@@ -24,6 +24,14 @@ const getAll = async () => {
                 },
             },
             {
+                $lookup: {
+                    from: 'saveds', // Tên của collection Like
+                    localField: '_id',
+                    foreignField: 'postId',
+                    as: 'saveds',
+                },
+            },
+            {
                 $project: {
                     _id: 1,
                     caption: 1,
@@ -32,6 +40,7 @@ const getAll = async () => {
                     location: 1,
                     creator: { $arrayElemAt: ['$creatorInfo', 0] },
                     likes: '$likes.userId',
+                    saveds: '$saveds.userId',
                 },
             },
         ]).exec();
@@ -80,14 +89,6 @@ const createPost = async (postData) => {
     }
     return data;
 };
-const createPost111 = async (postData) => {
-    try {
-        const post = await Post.create(postData);
-        return post;
-    } catch (error) {
-        throw new Error(error.message);
-    }
-};
 
 const getOfUser = async (userId) => {
     const userIdObjectId = new mongoose.Types.ObjectId(userId);
@@ -121,6 +122,14 @@ const getOfUser = async (userId) => {
                 },
             },
             {
+                $lookup: {
+                    from: 'saveds', // Tên của collection Like
+                    localField: '_id',
+                    foreignField: 'postId',
+                    as: 'saveds',
+                },
+            },
+            {
                 $project: {
                     _id: 1,
                     caption: 1,
@@ -129,6 +138,7 @@ const getOfUser = async (userId) => {
                     location: 1,
                     creator: { $arrayElemAt: ['$creatorInfo', 0] },
                     likes: '$likes.userId',
+                    saveds: '$saveds.userId',
                 },
             },
         ]).exec();
@@ -149,4 +159,22 @@ const getOfUser = async (userId) => {
     return data;
 };
 
-module.exports = { getAll, createPost, createPost111, getOfUser, getAllx };
+const getOfCaption = async (caption) => {
+    let data = {};
+    try {
+        const dataPost = await Post.find({ caption: { $regex: caption, $options: 'i' } });
+        if (dataPost) {
+            data.errCode = 0;
+            data.data = dataPost;
+        } else {
+            data.errCode = 1;
+            data.data = 'no data from DB';
+        }
+    } catch (error) {
+        data.errCode = 1;
+        data.message = 'error: ' + error;
+    }
+    return data;
+};
+
+module.exports = { getAll, createPost, getOfUser, getAllx, getOfCaption };

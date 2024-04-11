@@ -5,6 +5,8 @@ var appRoot = require('app-root-path');
 
 const PostController = require('../controllers/PostController');
 const UserController = require('../controllers/UserController');
+const LikedController = require('../controllers/LikedController');
+const SavedController = require('../controllers/SavedController');
 
 function authenToken(req, res, next) {
     const authorizationHeader = req.headers['authorization'];
@@ -51,9 +53,8 @@ function route(app) {
         res.send('Home');
     });
 
-    app.get('/users', authenToken, UserController.getAll);
-
     //USER
+    app.get('/api/users', authenToken, UserController.getAll);
     app.post('/api/login', UserController.login);
     app.post('/api/register', UserController.register);
     app.post('/api/refreshtoken', UserController.requestRefreshToken);
@@ -65,7 +66,17 @@ function route(app) {
     // app.get('/api/posts-all', PostController.getAllx);
     app.get('/api/post-number-of-user', authenToken, PostController.getOfUser);
     app.post('/api/create-post', authenToken, upload.single('image_post'), PostController.createPost);
-    app.post('/api/create-post111', PostController.createPost111);
+    app.get('/api/search-post', authenToken, PostController.getOfCaption);
+
+    //LIKED
+    app.post('/api/like-post', authenToken, LikedController.likePost);
+    //delete document (delete many)
+    app.post('/api/unlike-post', authenToken, LikedController.unLikePost);
+
+    //SAVED
+    app.post('/api/save-post', authenToken, SavedController.savePost);
+    //delete document (delete many)
+    app.post('/api/unsave-post', authenToken, SavedController.unSavePost);
 }
 
 module.exports = route;

@@ -86,8 +86,28 @@ const getUserById = async (userId) => {
     return data;
 };
 
+const getAll = async () => {
+    let data = {};
+    try {
+        const dataUser = await User.find();
+        if (dataUser) {
+            data.errCode = 0;
+            data.dataUser = dataUser;
+        } else {
+            data.errCode = 1;
+            data.message = 'failed!!!';
+        }
+    } catch (error) {
+        console.log(error);
+        data.message = 'err:' + error;
+        data.errCode = 1;
+    }
+    return data;
+};
+
 module.exports = {
     handleRegister,
     handleLogin,
     getUserById,
+    getAll,
 };

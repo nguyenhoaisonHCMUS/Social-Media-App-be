@@ -14,11 +14,11 @@ const generateRefreshAccessToken = (user) => {
 class UserController {
     async getAll(req, res) {
         try {
-            const users = await User.find();
-            res.json(users);
+            const users = await UserService.getAll();
+            return res.status(200).json({ message: 'success', data: users });
         } catch (error) {
             console.error('Error:', error);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     }
 
