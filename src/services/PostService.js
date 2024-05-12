@@ -32,15 +32,25 @@ const getAll = async () => {
                 },
             },
             {
+                $lookup: {
+                    from: 'comments', // Tên của collection Like
+                    localField: '_id',
+                    foreignField: 'postId',
+                    as: 'comments',
+                },
+            },
+            {
                 $project: {
                     _id: 1,
                     caption: 1,
                     tags: 1,
                     imgUrl: 1,
                     location: 1,
+                    cre_at: 1,
                     creator: { $arrayElemAt: ['$creatorInfo', 0] },
                     likes: '$likes.userId',
                     saveds: '$saveds.userId',
+                    comments: '$comments.userId',
                 },
             },
         ]).exec();
@@ -59,15 +69,6 @@ const getAll = async () => {
     }
 
     return data;
-};
-
-const getAllx = async () => {
-    try {
-        const data = await Post.find({}).exec();
-        return data;
-    } catch (error) {
-        return {};
-    }
 };
 
 const createPost = async (postData) => {
@@ -95,11 +96,6 @@ const getOfUser = async (userId) => {
     let data = {};
     try {
         const results = await Post.aggregate([
-            {
-                $addFields: {
-                    postId: '$_id', // Tạo một trường mới tạm thời để so sánh
-                },
-            },
             {
                 $match: {
                     $expr: { $eq: ['$creator', userIdObjectId] }, // So sánh postId với postObjectId
@@ -130,15 +126,25 @@ const getOfUser = async (userId) => {
                 },
             },
             {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'postId',
+                    as: 'comments',
+                },
+            },
+            {
                 $project: {
                     _id: 1,
                     caption: 1,
                     tags: 1,
                     imgUrl: 1,
                     location: 1,
+                    cre_at: 1,
                     creator: { $arrayElemAt: ['$creatorInfo', 0] },
                     likes: '$likes.userId',
                     saveds: '$saveds.userId',
+                    comments: '$comments.userId',
                 },
             },
         ]).exec();
@@ -176,5 +182,74 @@ const getOfCaption = async (caption) => {
     }
     return data;
 };
+const getOfID = async (postId) => {
+    let data = {};
+    const newPostId = new mongoose.Types.ObjectId(postId);
+    try {
+        const dataPost = await Post.aggregate([
+            {
+                $match: { _id: newPostId },
+            },
+            {
+                $lookup: {
+                    from: 'users', // Tên của collection User
+                    localField: 'creator',
+                    foreignField: '_id',
+                    as: 'creatorInfo',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'likes', // Tên của collection Like
+                    localField: '_id',
+                    foreignField: 'postId',
+                    as: 'likes',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'saveds', // Tên của collection Like
+                    localField: '_id',
+                    foreignField: 'postId',
+                    as: 'saveds',
+                },
+            },
+            {
+                $lookup: {
+                    from: 'comments', // Tên của collection Like
+                    localField: '_id',
+                    foreignField: 'postId',
+                    as: 'comments',
+                },
+            },
+            {
+                $project: {
+                    _id: 1,
+                    caption: 1,
+                    tags: 1,
+                    imgUrl: 1,
+                    location: 1,
+                    cre_at: 1,
+                    creator: { $arrayElemAt: ['$creatorInfo', 0] },
+                    likes: '$likes.userId',
+                    saveds: '$saveds.userId',
+                    comments: '$comments.userId',
+                },
+            },
+        ]).exec();
 
-module.exports = { getAll, createPost, getOfUser, getAllx, getOfCaption };
+        if (dataPost) {
+            data.errCode = 0;
+            data.data = dataPost;
+        } else {
+            data.errCode = 1;
+            data.data = 'no data from DB';
+        }
+    } catch (error) {
+        data.errCode = 1;
+        data.message = 'error: ' + error;
+    }
+    return data;
+};
+
+module.exports = { getAll, createPost, getOfUser, getOfCaption, getOfID };

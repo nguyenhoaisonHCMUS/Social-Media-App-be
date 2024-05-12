@@ -7,11 +7,14 @@ const dotenv = require('dotenv');
 const route = require('./routes');
 const cookieParser = require('cookie-parser');
 
-const port = 5000;
-
 dotenv.config();
 app.use('/uploads', express.static('src/uploads'));
-app.use(cors());
+app.use(
+    cors({
+        origin: 'http://localhost:5173',
+        methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    }),
+);
 app.set('view engine', 'ejs');
 app.use(morgan('combined'));
 app.use(cookieParser());
@@ -23,6 +26,6 @@ route(app);
 const db = require('./config/db');
 db.connectToMongoDB();
 
-app.listen(port, () => {
-    console.log(`Example app listening at  http://localhost:${port}`);
+app.listen(process.env.PORT, () => {
+    console.log(`Example app listening at  http://localhost:${process.env.PORT}`);
 });

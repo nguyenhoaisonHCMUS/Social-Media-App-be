@@ -7,6 +7,7 @@ const PostController = require('../controllers/PostController');
 const UserController = require('../controllers/UserController');
 const LikedController = require('../controllers/LikedController');
 const SavedController = require('../controllers/SavedController');
+const CommentController = require('../controllers/CommentController');
 
 function authenToken(req, res, next) {
     const authorizationHeader = req.headers['authorization'];
@@ -54,19 +55,19 @@ function route(app) {
     });
 
     //USER
-    app.get('/api/users', authenToken, UserController.getAll);
     app.post('/api/login', UserController.login);
     app.post('/api/register', UserController.register);
     app.post('/api/refreshtoken', UserController.requestRefreshToken);
+    app.get('/api/users', authenToken, UserController.getAll);
     app.post('/api/logout', authenToken, UserController.logout);
     app.get('/api/get-user-id', authenToken, UserController.getUserById);
 
     //POSTS
     app.get('/api/posts', authenToken, PostController.getAll);
-    // app.get('/api/posts-all', PostController.getAllx);
     app.get('/api/post-number-of-user', authenToken, PostController.getOfUser);
     app.post('/api/create-post', authenToken, upload.single('image_post'), PostController.createPost);
     app.get('/api/search-post', authenToken, PostController.getOfCaption);
+    app.get('/api/search-post-id', authenToken, PostController.getOfID);
 
     //LIKED
     app.post('/api/like-post', authenToken, LikedController.likePost);
@@ -77,6 +78,10 @@ function route(app) {
     app.post('/api/save-post', authenToken, SavedController.savePost);
     //delete document (delete many)
     app.post('/api/unsave-post', authenToken, SavedController.unSavePost);
+
+    //COMMENT
+    app.get('/api/post-comment', authenToken, CommentController.getCommentByPostId);
+    app.post('/api/add-comment', authenToken, CommentController.addComment);
 }
 
 module.exports = route;

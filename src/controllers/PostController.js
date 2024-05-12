@@ -15,18 +15,6 @@ class PostController {
             return res.status(500).json({ message: 'server not found' });
         }
     }
-    async getAllx(req, res) {
-        try {
-            const data = await PostService.getAllx();
-            if (data) {
-                return res.status(200).json({ data: data });
-            } else {
-                return res.status(401), json({ message: data.message });
-            }
-        } catch (error) {
-            return res.status(500).json({ message: 'server not found' });
-        }
-    }
     async createPost(req, res) {
         const { caption, tags, location, creator } = req.body;
         const imgUrl = `http://localhost:${port}/uploads/` + req.file.filename;
@@ -107,6 +95,24 @@ class PostController {
             }
         } catch (error) {
             return res.status(500).json({ message: error });
+        }
+    }
+    async getOfID(req, res) {
+        try {
+            const postId = req.query.postId;
+
+            if (!postId) {
+                return res.status(403).json({ message: 'no data on body' });
+            }
+            const data = await PostService.getOfID(postId);
+            if (data.errCode === 0) {
+                return res.status(200).json({ message: 'success', data: data.data });
+            }
+
+            return res.status(401).json({ message: 'nodata' });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ message: 'server not found' });
         }
     }
 }

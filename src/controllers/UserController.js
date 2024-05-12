@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 let refreshTokens = [];
 
 const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.JWT_ACCESS_PRIVATE_KEY, { expiresIn: '30d' });
+    return jwt.sign(user, process.env.JWT_ACCESS_PRIVATE_KEY, { expiresIn: '30s' });
 };
 const generateRefreshAccessToken = (user) => {
     return jwt.sign(user, process.env.JWT_REFRESH_PRIVATE_KEY, { expiresIn: '30d' });
@@ -81,7 +81,7 @@ class UserController {
             }
 
             if (!refreshTokens.includes(refreshtoken)) {
-                return res.status(403).json('refreshToken is not valid');
+                return res.status(403).json({ message: 'refreshToken is not valid' });
             }
 
             jwt.verify(refreshtoken, process.env.JWT_REFRESH_PRIVATE_KEY, (err, data) => {
