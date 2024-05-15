@@ -1,4 +1,5 @@
 const PostService = require('../services/PostService');
+const Post = require('../models/PostModel');
 const mongoose = require('mongoose');
 const port = 5000;
 
@@ -113,6 +114,27 @@ class PostController {
         } catch (error) {
             console.log(error);
             return res.status(500).json({ message: 'server not found' });
+        }
+    }
+
+    async updatePost(req, res) {
+        const _id = req.params._id;
+        console.log('params: ', req.params);
+        const { name, email, imgUrl, password, username } = req.body;
+        if (!_id) {
+            return res.status(403).json({ message: 'PostId not found' });
+        }
+        try {
+            const updatedFields = { caption, tags, imgUrl, location }; // Only update fields provided in the request body
+
+            const updatedUser = await Post.findByIdAndUpdate(_id, updatedFields, { new: true });
+            if (!updatedUser) {
+                return res.status(404).json({ message: 'Post not found' });
+            }
+            res.status(200).json(updatedUser);
+        } catch (error) {
+            console.error('Error updating post:', error);
+            res.status(500).json({ message: 'Internal Server Error' });
         }
     }
 }

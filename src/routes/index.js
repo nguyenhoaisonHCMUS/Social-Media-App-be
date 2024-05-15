@@ -59,6 +59,7 @@ function route(app) {
     app.get('/api/users', authenToken, UserController.getAll);
     app.post('/api/logout', authenToken, UserController.logout);
     app.get('/api/get-user-id', authenToken, UserController.getUserById);
+    app.patch('/api/user/:_id', authenToken, UserController.updateUser);
 
     //POSTS
     app.get('/api/posts', authenToken, PostController.getAll);
@@ -66,6 +67,7 @@ function route(app) {
     app.post('/api/create-post', authenToken, upload.single('image_post'), PostController.createPost);
     app.get('/api/search-post', authenToken, PostController.getOfCaption);
     app.get('/api/search-post-id', authenToken, PostController.getOfID);
+    app.patch('/api/post/:_id', authenToken, upload.single('image_post'), PostController.updatePost);
 
     //LIKED
     app.post('/api/like-post', authenToken, LikedController.likePost);
