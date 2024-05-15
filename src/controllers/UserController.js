@@ -1,15 +1,9 @@
 const User = require('../models/UserModel');
 const UserService = require('../services/UserService');
 const jwt = require('jsonwebtoken');
+const { generateAccessToken, generateRefreshAccessToken } = require('../utils/index');
 
 let refreshTokens = [];
-
-const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.JWT_ACCESS_PRIVATE_KEY, { expiresIn: '30s' });
-};
-const generateRefreshAccessToken = (user) => {
-    return jwt.sign(user, process.env.JWT_REFRESH_PRIVATE_KEY, { expiresIn: '30d' });
-};
 
 class UserController {
     async getAll(req, res) {
@@ -33,20 +27,16 @@ class UserController {
 
             const userData = await UserService.handleLogin(email, password);
             if (userData.errCode === 0) {
-                // Tạo mã thông báo truy cập và mã thông báo làm mới
+                // create new access and refresh Token
                 const accessToken = generateAccessToken({ userID: userData.user._id });
-                const refreshToken = generateRefreshAccessToken({
-                    user: { username: userData.user.username, email: userData.user.email },
-                });
+                const refreshToken = generateRefreshAccessToken(
+                    {
+                        username: userData.user.username,
+                    },
+                    res,
+                );
 
-                // Lưu mã thông báo làm mới vào danh sách refreshTokens và gửi nó về cho client thông qua cookie
                 refreshTokens.push(refreshToken);
-                res.cookie('refreshToken', refreshToken, {
-                    httpOnly: true,
-                    secure: false,
-                    path: '/',
-                    sameSite: 'strict',
-                });
 
                 return res.status(200).json({ user: userData.user, accessToken: accessToken });
             } else {
@@ -73,26 +63,27 @@ class UserController {
     }
 
     async requestRefreshToken(req, res) {
+        console.log(req.cookies);
         try {
             const refreshtoken = req.cookies.refreshToken;
-            console.log(refreshtoken);
+            console.log('refreshtoken: ', refreshtoken);
             if (!refreshtoken) {
                 return res.status(401).json({ message: "You're not authenticated!" });
             }
 
             if (!refreshTokens.includes(refreshtoken)) {
-                return res.status(403).json({ message: 'refreshToken is not valid' });
+                return res.status(401).json({ message: 'refreshToken is not valid' });
             }
 
             jwt.verify(refreshtoken, process.env.JWT_REFRESH_PRIVATE_KEY, (err, data) => {
                 if (err) {
                     return res.status(401).json({ err });
                 }
-                console.log(data);
+                console.log('data verify: ', data);
 
                 // Xác thực thành công, cập nhật mã thông báo
                 const newAccessToken = generateAccessToken({ data: data || 'not data' });
-                const newRefreshToken = generateRefreshAccessToken({ data: data || 'not data' });
+                const newRefreshToken = generateRefreshAccessToken({ data: data || 'not data' }, res);
 
                 // Xóa mã thông báo cũ
                 refreshTokens = refreshTokens.filter((token) => token !== refreshtoken);
@@ -100,13 +91,6 @@ class UserController {
                 // Thêm mã thông báo mới vào danh sách
                 refreshTokens.push(newRefreshToken);
 
-                // Gửi lại mã thông báo truy cập mới và cập nhật mã thông báo làm mới trong cookie
-                res.cookie('refreshToken', newRefreshToken, {
-                    httpOnly: true,
-                    secure: false,
-                    path: '/',
-                    sameSite: 'strict',
-                });
                 return res.status(200).json({ accessToken: newAccessToken });
             });
         } catch (error) {
@@ -118,6 +102,7 @@ class UserController {
     async logout(req, res) {
         try {
             await res.clearCookie('refreshToken');
+
             refreshTokens = refreshTokens.filter((token) => token !== req.cookies.refreshToken);
             res.status(200).json({ message: 'logout successfull' });
         } catch (error) {

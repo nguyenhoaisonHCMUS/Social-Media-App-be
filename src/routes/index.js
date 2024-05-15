@@ -9,8 +9,10 @@ const LikedController = require('../controllers/LikedController');
 const SavedController = require('../controllers/SavedController');
 const CommentController = require('../controllers/CommentController');
 
+//const authenToken = require('../utils/index');
 function authenToken(req, res, next) {
     const authorizationHeader = req.headers['authorization'];
+    console.log(req.headers);
     if (!authorizationHeader) {
         return res.status(401).json({ message: 'no token auh' });
     }
@@ -22,11 +24,11 @@ function authenToken(req, res, next) {
         if (err) {
             return res.status(403).json({ message: 'invalid token' }); // Trả về 403 nếu token không hợp lệ
         }
-        // console.log(data);
         req.user = data;
         next();
     });
 }
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, appRoot + '/src/uploads');
@@ -50,10 +52,6 @@ const imageFilter = function (req, file, cb) {
 let upload = multer({ storage: storage, fileFilter: imageFilter });
 
 function route(app) {
-    app.get('/', (req, res) => {
-        res.send('Home');
-    });
-
     //USER
     app.post('/api/login', UserController.login);
     app.post('/api/register', UserController.register);
